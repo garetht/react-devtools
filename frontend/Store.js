@@ -58,6 +58,7 @@ type ContextMenu = {
  * Public actions:
  * - scrollToNode(id)
  * - changeTextContent(id, text)
+ * - toggleImmutablesAsJS
  * - changeSearch
  * - hoverClass
  * - selectFirstOfClass
@@ -88,6 +89,7 @@ class Store extends EventEmitter {
 
   // Public state
   contextMenu: ?ContextMenu;
+  immutablesAsJS: boolean;
   hovered: ?ElementID;
   isBottomTagSelected: boolean;
   roots: List;
@@ -109,6 +111,7 @@ class Store extends EventEmitter {
     // Public state
     this.roots = new List();
     this.contextMenu = null;
+    this.immutablesAsJS = false;
     this.searchRoots = null;
     this.hovered = null;
     this.selected = null;
@@ -160,6 +163,11 @@ class Store extends EventEmitter {
       props.children = text;
     }
     this.emit(id);
+  }
+
+  toggleImmutablesAsJS(cb: () => void): void {
+    this.immutablesAsJS = !this.immutablesAsJS;
+    cb();
   }
 
   changeSearch(text: string): void {
@@ -363,12 +371,18 @@ class Store extends EventEmitter {
   inspect(id: ElementID, path: Array<string>, cb: () => void) {
     invariant(path[0] === 'props' || path[0] === 'state' || path[0] === 'context',
               'Inspected path must be one of props, state, or context');
-    this._bridge.inspect(id, path, value => {
+    this._bridge.inspect(id, path, this.immutablesAsJS, value => {
       var base = this.get(id).get(path[0]);
       var inspected = path.slice(1).reduce((obj, attr) => obj ? obj[attr] : null, base);
       if (inspected) {
+        if (inspected[consts.immutablesAsJS] !== this.immutablesAsJS) {
+          Object.getOwnPropertyNames(inspected).forEach(key => {
+            delete inspected[key];
+          })
+        }
         assign(inspected, value);
         inspected[consts.inspected] = true;
+        inspected[consts.immutablesAsJS] = this.immutablesAsJS;
       }
       cb();
     });

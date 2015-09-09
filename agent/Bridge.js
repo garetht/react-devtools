@@ -132,7 +132,7 @@ class Bridge {
     this._wall.listen(this._handleMessage.bind(this));
   }
 
-  inspect(id: string, path: Array<string>, cb: (val: any) => any) {
+  inspect(id: string, path: Array<string>, immutablesAsJS: boolean, cb: (val: any) => any) {
     var _cid = this._cid++;
     this._cbs.set(_cid, (data, cleaned, proto, protoclean) => {
       if (cleaned.length) {
@@ -152,6 +152,7 @@ class Bridge {
       callback: _cid,
       path,
       id,
+      immutablesAsJS
     });
   }
 
@@ -259,7 +260,7 @@ class Bridge {
     }
 
     if (payload.type === 'inspect') {
-      this._inspectResponse(payload.id, payload.path, payload.callback);
+      this._inspectResponse(payload.id, payload.path, payload.immutablesAsJS, payload.callback);
       return;
     }
 
@@ -311,7 +312,7 @@ class Bridge {
     });
   }
 
-  _inspectResponse(id: string, path: Array<string>, callback: number) {
+  _inspectResponse(id: string, path: Array<string>, immutablesAsJS: boolean, callback: number) {
     var val = getIn(this._inspectables.get(id), path);
     var result = {};
     var cleaned = [];
@@ -321,7 +322,7 @@ class Bridge {
       var protod = false;
       var isFn = typeof val === 'function';
 
-      if (immutableUtils.isImmutable(val)) {
+      if (immutablesAsJS && immutableUtils.isImmutable(val)) {
         val = immutableUtils.shallowToJS(val);
       }
 

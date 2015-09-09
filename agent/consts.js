@@ -16,6 +16,7 @@ module.exports = {
   name: Symbol('name'),
   type: Symbol('type'),
   inspected: Symbol('inspected'),
+  immutablesAsJS: Symbol('immutablesAsJS'),
   meta: Symbol('meta'),
   proto: Symbol('proto'),
 };
