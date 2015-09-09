@@ -67,9 +67,12 @@ class PropState extends React.Component {
     var state = this.props.node.get('state');
     var context = this.props.node.get('context');
     var propsReadOnly = !this.props.node.get('canUpdate');
-
     return (
       <div style={styles.container}>
+        <div>
+          <input type='checkbox' checked={this.props.immutablesAsJS} onChange={this.props.onToggleImmutablesAsJS.bind(this)} id='immutables-as-js'/>
+          <label for='immutables-as-js'>Show Immutables as JS</label>
+        </div>
         <div style={styles.header}>
           <span style={styles.headerName}>
             &lt;{this.props.node.get('name')}&gt;
@@ -85,6 +88,7 @@ class PropState extends React.Component {
           <DataView
             path={['props']}
             readOnly={propsReadOnly}
+            immutablesAsJS={this.props.immutablesAsJS}
             inspect={this.props.inspect}
             showMenu={this.props.showMenu}
             key={this.props.id + '-props'}
@@ -98,6 +102,7 @@ class PropState extends React.Component {
             <DataView
               data={state}
               path={['state']}
+              immutablesAsJS={this.props.immutablesAsJS}
               inspect={this.props.inspect}
               showMenu={this.props.showMenu}
               key={this.props.id + '-state'}
@@ -110,6 +115,7 @@ class PropState extends React.Component {
             <DataView
               data={context}
               path={['context']}
+              immutablesAsJS={this.props.immutablesAsJS}
               inspect={this.props.inspect}
               showMenu={this.props.showMenu}
               key={this.props.id + '-context'}
@@ -131,14 +137,22 @@ var WrappedPropState = decorate({
     return ['selected', store.selected];
   },
 
+  shouldUpdate() {
+    return true;
+  },
+
   props(store) {
     var node = store.selected ? store.get(store.selected) : null;
     return {
       id: store.selected,
+      immutablesAsJS: store.immutablesAsJS,
       node,
       canEditTextContent: store.capabilities.editTextContent,
       onChangeText(text) {
         store.changeTextContent(store.selected, text);
+      },
+      onToggleImmutablesAsJS() {
+        store.toggleImmutablesAsJS(this.props.reload);
       },
       onChange(path, val) {
         if (path[0] === 'props') {

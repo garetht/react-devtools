@@ -72,8 +72,18 @@ class DataItem extends React.Component {
     this.state = {open: false, loading: false};
   }
 
+  shouldInspect(props) {
+    return (
+      props.value &&
+      (
+        props.value[consts.inspected] === false ||
+        props.value[consts.immutablesAsJS] !== props.immutablesAsJS
+      )
+    );
+  }
+
   componentWillReceiveProps(nextProps) {
-    if (this.state.open && nextProps.value && nextProps.value[consts.inspected] === false) {
+    if (this.state.open && this.shouldInspect(nextProps)) {
       this.inspect();
     }
   }
@@ -89,7 +99,7 @@ class DataItem extends React.Component {
     if (this.state.loading) {
       return;
     }
-    if (this.props.value && this.props.value[consts.inspected] === false) {
+    if (this.shouldInspect(this.props)) {
       this.inspect();
       return;
     }
@@ -140,6 +150,7 @@ class DataItem extends React.Component {
           <DataView
             data={this.props.value}
             path={this.props.path}
+            immutablesAsJS={this.props.immutablesAsJS}
             inspect={this.props.inspect}
             showMenu={this.props.showMenu}
             readOnly={this.props.readOnly}
